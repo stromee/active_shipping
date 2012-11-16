@@ -279,9 +279,8 @@ module ActiveMerchant
           transit_time = rated_shipment.get_text('TransitTime').to_s if service_code == "FEDEX_GROUND"
           max_transit_time = rated_shipment.get_text('MaximumTransitTime').to_s if service_code == "FEDEX_GROUND"
           transit_range = parse_transit_times([transit_time,max_transit_time])
-          # [TransitTimes.index( transit_time? transit_time.to_s : 0),TransitTimes.index(max_transit_time?max_transit_time.to_s : 0)]
 
-          # delivery_range = [rated_shipment.get_text('DeliveryTimestamp').to_s] * 2)
+          delivery_range = [rated_shipment.get_text('DeliveryTimestamp').to_s] * 2
 
           currency = handle_incorrect_currency_codes(rated_shipment.get_text('RatedShipmentDetails/ShipmentRateDetail/TotalNetCharge/Currency').to_s)
           rate_estimates << RateEstimate.new(origin, destination, @@name,
@@ -289,7 +288,9 @@ module ActiveMerchant
                               :service_code => service_code,
                               :total_price => rated_shipment.get_text('RatedShipmentDetails/ShipmentRateDetail/TotalNetCharge/Amount').to_s.to_f,
                               :currency => currency,
-                              :packages => packages)
+                              :packages => packages,
+                              :delivery_range => delivery_range, 
+                              :days_in_transit => transit_range)
         end
 		
         if rate_estimates.empty?
@@ -403,10 +404,9 @@ module ActiveMerchant
 
       def parse_transit_times(times)
         results = []
-        today = Date.today
         times.each do |day_count|
           days = TransitTimes.index(day_count.to_s.chomp)
-          results << today + days.to_i
+          results << days.to_i
         end
         results
       end
